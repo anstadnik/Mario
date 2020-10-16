@@ -29,7 +29,7 @@ class Menu():
     def loop(self):
         while 42:
             try:
-                ret = start_screen()
+                # ret = start_screen()
                 # ret = 'Play'
                 ret = 'Level editor'
 
@@ -38,8 +38,8 @@ class Menu():
                     level = list(self.levels.values())[0]
                     Game(level).play()
                 elif ret == 'Level editor':
-                    level = self.pick_lvl(add_new=True)
-                    # level = Level('Custom_lvl_1')
+                    # level = self.pick_lvl(add_new=True)
+                    level = Level('Custom_lvl_1')
                     level = Lvl_editor(level).edit()
                     self.levels[level.name] = level
                 else:

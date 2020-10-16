@@ -1,9 +1,10 @@
 import enum
 import pygame as pg
-from entity import Entity, Entity_T
-from typing import Tuple
+from entity import Entity, ENTITY_T
+from typing import Tuple, List
 from glob import glob
 import random
+
 
 class Action(enum.Enum):
     WALK = enum.auto()
@@ -15,49 +16,74 @@ class Action(enum.Enum):
     CASTING_SPELLS = enum.auto()
     IDLE_BLINK = enum.auto()
 
+
 class Character(Entity):
-    def __init__(self, pos, action_imgs):
-        super().__init__()
+    def __init__(self, pos: List[int], entity: ENTITY_T,
+                 bl_size: Tuple[int, int] = None, xy: Tuple[int, int] = None,
+                 n_img: int = 1):
+        super().__init__(pos, entity, xy=xy)
 
-        self.i = 0
-        self.velocity = (0, 0)
+        self.velocity = [0, 0]
         self.action = Action.IDLE
+        self.n_img = n_img
 
-    def update(self, dt):
-        self.pos[0] += self.velocity[0] * dt
-        self.pos[1] += self.velocity[1] * dt
-        screen_w, screen_h  = pg.display.get_surface().get_size()
-        constrain = lambda n, nmax: max(min(n, nmax), 0)
-        self.pos[0] = constrain(self.pos[0], screen_w-self.bl_w)
-        self.pos[1] = constrain(self.pos[1], screen_h-self.bl_h)
-        self.rect.move_ip(self.pos)
-
-        self.i = self.i if self.im_id < len(self.images[self.action]) else 0
-        self.image = self.images[self.action][i]
-
-class NPC(Character, pg.sprite.Sprite):
-    def __init__(self, pos: Tuple[int, int], entity: BL_T, action: Action, 
-            bl_size: Tuple[int, int] = None, xy: Tuple[int, int] = None):
-        super().__init__(pos, entity, bl_size, xy)
-
-        self.images = {}
+        self._images = {}
         if bl_size:
             self.init_sprite(bl_size, xy)
 
-    def recolor(self, color):
-        self.image = self.orig_image.copy()
-        self.image.fill(color, special_flags=pg.BLEND_ADD)
+    def update(self, dt):
+        screen_size = pg.display.get_surface().get_size()
+        def constrain(n, nmax): return max(min(n, nmax), 0)
+        border = [screen_size[i]-self.ent_size[i] for i in range(2)]
+        xy = [constrain(self.xy[i] + self.velocity[i] * dt, border[i])
+                for i in range(2)]
+        offset = [self.xy[i] - xy[i] for i in range(2)]
+        self.xy = xy
+        self.rect.move_ip(*offset)
 
-    def init_image(self, tp: int = None):
-        if tp is None:
-            tp = random.randint(10) + 1
+        self.n_img += 1
+        self.n_img = self.n_img if self.n_img < len(self._images[self.action]) else 0
+        self._image = self._images[self.action][self.n_img]
+
+
+class NPC(Character):
+    def __init__(self, pos: List[int], entity: ENTITY_T,
+                 bl_size: Tuple[int, int] = None, xy: Tuple[int, int] = None,
+                 n_img: int = 1):
+        super().__init__(pos, entity, bl_size, xy)
+
+    def init_image(self, n_skin: int = None):
+        if n_skin is None:
+            n_skin = random.randint(1, 10)
         for A in Action:
-            filenames = glob(f'*{A.name.lower()}*.png')
+            filenames = glob(
+                self.entity.img_path.replace(
+                    'N_SKIN', str(n_skin)).replace(
+                    'ACTION', self.action.name.lower()))
             images = []
-            for i in filenames:
-                image = pg.image.load(self.entity.image_path).convert_alpha()
-                images.append(pg.transform.scale(image, (self.ent_w,
-                    self.ent_h)))
-            self.images[A] = images
-        self.rect = images[0].get_rect()
+            for image_path in sorted(filenames):
+                image = pg.image.load(image_path).convert_alpha()
+                images.append(pg.transform.scale(image, self.ent_size))
+            self._images[A] = images
+        self._image = self._images[self.action][self.n_img] 
+        self.rect = self._image.get_rect().move(*self.xy)
+        return self
+
+
+class Player(Character, pg.sprite.Sprite):
+    def init_image(self, n_skin: int = None):
+        if n_skin is None:
+            n_skin = random.randint(1, 3)
+        for A in Action:
+            filenames = glob(
+                self.entity.img_path.replace(
+                    'N_SKIN', str(n_skin)).replace(
+                    'ACTION', self.action.name.capitalize()))
+            images = []
+            for image_path in sorted(filenames):
+                image = pg.image.load(image_path).convert_alpha()
+                images.append(pg.transform.scale(image, self.ent_size))
+            self._images[A] = images
+        self._image = self._images[self.action][self.n_img] 
+        self.rect = self._image.get_rect().move(*self.xy)
         return self

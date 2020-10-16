@@ -1,13 +1,14 @@
 import enum
+import os
 import pickle
 from copy import copy
-
-import pygame as pg
 from typing import Tuple
 
-from entity import Entity_T
+import pygame as pg
+
 from block import Block
-import os
+from entity import ENTITY_T
+from entity_factory import entity_factory
 
 
 class Level():
@@ -22,9 +23,12 @@ class Level():
         screen_w, screen_h  = pg.display.get_surface().get_size()
         self.bl_h, self.bl_w = screen_h // self.h, screen_w // self.w
         for x in range(self.w):
-            b = Block((x, self.h-1), Entity_T.GRASS)
-            self.sprites.add(b.init_sprite((self.bl_h, self.bl_w)),
-                    layer=b.entity.layer)
+            entity, layer = entity_factory([x, self.h-1], ENTITY_T.GRASS, (self.bl_h, self.bl_w))
+            self.sprites.add(entity, layer=layer)
+            print(entity.xy)
+
+    def update(self, dt):
+        self.sprites.update(dt)
 
     def draw(self, screen):
         self.sprites.draw(screen)
@@ -32,22 +36,21 @@ class Level():
     def resize(self, screen_w: int = None, screen_h: int = None):
         w, h = pg.display.get_surface().get_size()
         screen_w, screen_h = screen_w or w, screen_h or h,
-        self.bl_h, self.bl_w = screen_h // self.h, screen_w // self.w
+        print(screen_w, screen_h)
+        self.bl_w, self.bl_h = screen_w // self.w, screen_h // self.h
+        print(self.bl_w, self.bl_h, self.w, self.h)
         new_sprites = pg.sprite.LayeredUpdates()
         for b in self.sprites.sprites():
-            new_b = Block(b.pos, b.entity, bl_size=(self.bl_h, self.bl_w))
-            new_sprites.add(new_b.init_sprite((self.bl_h, self.bl_w)),
-                    layer=b.entity.layer)
+            entity, layer = entity_factory(b.pos, b.entity, (self.bl_h, self.bl_w))
+            new_sprites.add(entity, layer=layer)
+            # __import__('ipdb').set_trace()
         self.sprites = new_sprites
         return self
 
-
-    def add_sprite(self, pos: Tuple[int, int], entity_type: Entity_T):
+    def add_sprite(self, pos: Tuple[int, int], entity_type: ENTITY_T):
         pos = pos[0] // self.bl_w, pos[1] // self.bl_h
-        b = Block(pos, entity_type, (self.bl_h, self.bl_w))
-        self.sprites.add(b, layer=entity_type.layer)
-
-    # def delete_sprite(self, sprite):
+        entity, layer = entity_factory(pos, entity_type, (self.bl_h, self.bl_w))
+        self.sprites.add(entity, layer=layer)
 
     #############
     #  Dumping  #

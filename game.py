@@ -1,7 +1,7 @@
 import pygame as pg
 
 from helpers import BackToMenu, FinishGame
-from entity import Entity_T
+from entity import ENTITY_T
 from block import Block
 from level import Level
 
@@ -13,7 +13,7 @@ class Game():
         self.level = level.resize()
         self.clock = pg.time.Clock()
         self.bgr = pg.image.load(
-            Entity_T.EMPTY.image_path).convert_alpha().get_at((0, 0))
+            ENTITY_T.EMPTY.image_path).convert_alpha().get_at((0, 0))
 
     def play(self):
         while 42:

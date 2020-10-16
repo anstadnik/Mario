@@ -2,9 +2,12 @@ import pygame as pg
 
 from helpers import BackToMenu, FinishGame
 from level import Level
-from entity import Entity_T
+from entity import ENTITY_T
 from block import Block
+from entity_factory import entity_factory
+from ipdb import launch_ipdb_on_exception
 
+FRAMERATE = 30
 
 class ReturnLevel(Exception):
     pass
@@ -14,27 +17,35 @@ class Lvl_editor:
     def __init__(self, level: Level):
         self.screen = pg.display.get_surface()
         self.sr_w, self.sr_h = self.screen.get_size()
-        self.level = level.resize(screen_w = self.sr_w - 50)
+        palette_size = self.sr_w // (level.w + 1)
+        self.level = level.resize(screen_w = self.sr_w - palette_size)
+        self.clock = pg.time.Clock()
         self.bgr = pg.image.load(
-            Entity_T.EMPTY.image_path).convert_alpha().get_at((0, 0))
+            ENTITY_T.EMPTY.img_path).convert_alpha().get_at((0, 0))
 
         # Set up palette
         self.palette = pg.sprite.LayeredUpdates()
         bl_h, bl_w = level.bl_h, level.bl_w
-        for y, entity in enumerate(Entity_T):
-            self.palette.add(
-                Block((0, y), entity, (bl_h, bl_w), xy=(self.sr_w-50, y*bl_h)), layer=2)
+        for y, entity in enumerate(ENTITY_T):
+            entity, layer = entity_factory([0, y], entity, (bl_h, bl_w),
+                    (self.sr_w-palette_size, y*bl_h))
+            self.palette.add(entity, layer=layer)
 
-        self.brush = Entity_T.EMPTY
-        self.prev_hov = None
+        self.brush = ENTITY_T.EMPTY
 
     def edit(self):
         try:
             while 42:
                 self.__process_events()
+                self.update()
                 self.draw()
         except ReturnLevel:
             return self.level
+
+    def update(self):
+        dt = self.clock.tick(FRAMERATE)
+        self.level.update(dt)
+        self.palette.update(dt)
 
     def draw(self):
         self.screen.fill(self.bgr)
@@ -76,15 +87,9 @@ class Lvl_editor:
 
     def __hover(self, event):
         hov = self.check_at_pos(event.pos)
-        if hov and hov != self.prev_hov:
-            if hov in self.palette:
-                pg.mouse.set_cursor(*pg.cursors.diamond)
-            hov.recolor(pg.Color(100, 100, 100))
-        if hov != self.prev_hov:
-            if self.prev_hov:
-                self.prev_hov.recolor(pg.Color(0, 0, 0))
-            self.prev_hov = hov
-        if not hov:
+        if hov in self.palette:
+            pg.mouse.set_cursor(*pg.cursors.diamond)
+        elif not hov:
             pg.mouse.set_cursor(*pg.cursors.arrow)
 
     def check_at_pos(self, pos) -> Block:

@@ -1,6 +1,6 @@
 import enum
 import pygame as pg
-from typing import Tuple
+from typing import Tuple, List
 
 #######################
 #  Types of entities  #
@@ -21,26 +21,23 @@ from typing import Tuple
 #   input
 
 
-class Entity_T(enum.Enum):
+class ENTITY_T(enum.Enum):
     """
-    This class defines level block's names, images and the layer
+    This class defines level block's names,  images and the layer
     
-    Layer 1:
-        Map blocks
-    Layer 2:
-        Objects on the map
-    Layer 3:
-        Particles
-    Layer 4:
-        NPC
-    Layer 5:
-        Player
+    Layer 1: Map blocks
+    Layer 2: Objects on the map
+    Layer 3: Particles
+    Layer 4: NPC
+    Layer 5: Player
     """
-    EMPTY = ('./PNG/Tiles/tile13.png',     1)
-    GRASS = ('./PNG/Tiles/tile32.png',     1)
-    STONE = ('./PNG/Objects/rocks1_6.png', 1)
-    TREE = ('./PNG/Objects/trees2_2.png', 2)
-    POINTER = ('./PNG/Objects/pointer.png',  2)
+    EMPTY   = ('./PNG/Tiles/tile13.png',                  1)
+    GRASS   = ('./PNG/Tiles/tile32.png',                  1)
+    STONE   = ('./PNG/Objects/rocks1_6.png',              1)
+    TREE    = ('./PNG/Objects/trees2_2.png',              2)
+    POINTER = ('./PNG/Objects/pointer.png',               2)
+    NPC     = ('./PNG/NPC/N_SKIN_enemies_1_ACTION_*.png', 4)
+    PLAYER  = ('./PNG/Wraith/Wraith_0N_SKIN_ACTION_*.png', 5)
 
     def __new__(cls, *args, **kwgs):
         value = len(cls.__members__) + 1
@@ -48,13 +45,13 @@ class Entity_T(enum.Enum):
         obj._value_ = value
         return obj
 
-    def __init__(self, image_path, layer):
-        self.image_path = image_path
+    def __init__(self, img_path, layer):
+        self.img_path = img_path
         self.layer = layer
 
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self, pos: Tuple[int, int], entity: Entity_T,
+    def __init__(self, pos: List[int], entity: ENTITY_T,
             ent_size: Tuple[int, int] = None, xy: Tuple[int, int] = None):
         """
         Create a new entity for level
@@ -67,23 +64,34 @@ class Entity(pg.sprite.Sprite):
         self.entity = entity
         self.pos = pos
         self.clean_sprite()
-        self.ent_h, self.ent_w, self.x, self.y = [None] * 4
+        self.ent_size, self.xy, = [None] * 2
+        self.added_color = None
         if ent_size:
             self.init_sprite(ent_size, xy)
 
     def init_sprite(self, ent_size: Tuple[int, int] = None, xy: Tuple[int, int] = None):
         super().__init__()
         if ent_size:
-            self.ent_h, self.ent_w = ent_size
-        assert self.ent_h is not None and self.ent_w is not None
-        self.x, self.y = (xy or (self.ent_w * self.pos[0], self.ent_h * self.pos[1]))
+            self.ent_size = ent_size
+        assert self.ent_size is not None
+        self.xy = (xy or [self.ent_size[i] * self.pos[i] for i in range(2)])
         self.init_image()
         return self
     
+    @property
+    def image(self):
+        if self.added_color:
+            image = self._image.copy()
+            image.fill(self.added_color, special_flags=pg.BLEND_ADD)
+            return image
+        return self._image
+
+    def update(self, dt):
+        pass
+
     def init_image(self):
         raise NotImplementedError
 
     def clean_sprite(self):
-        self.orig_image = None
-        self.image = None
+        self._image = None
         self.rect = None

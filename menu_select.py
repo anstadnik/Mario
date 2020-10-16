@@ -1,7 +1,7 @@
 import pygame as pg
 from pygame.freetype import SysFont
 from helpers import FinishGame
-from entity import Entity_T
+from entity import ENTITY_T
 pg.init()
 
 
@@ -28,7 +28,7 @@ class Button(pg.sprite.Sprite):
 def menu_select(texts):
     screen = pg.display.get_surface()
     font = pg.font.SysFont('jetbrainsmonoextraboldnerdfont', 20)
-    background = pg.image.load(Entity_T.EMPTY.image_path).convert_alpha()
+    background = pg.image.load(ENTITY_T.EMPTY.img_path).convert_alpha()
     background = background.get_at((0, 0))
 
     screen_width, screen_height = screen.get_size()
