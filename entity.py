@@ -64,8 +64,9 @@ class Entity(pg.sprite.Sprite):
         self.entity = entity
         self.pos = pos
         self.clean_sprite()
-        self.ent_size, self.xy, = [None] * 2
+        self.ent_size, self.xy = [None] * 2
         self.added_color = None
+        self.flip = False
         if ent_size:
             self.init_sprite(ent_size, xy)
 
@@ -74,19 +75,20 @@ class Entity(pg.sprite.Sprite):
         if ent_size:
             self.ent_size = ent_size
         assert self.ent_size is not None
-        self.xy = (xy or [self.ent_size[i] * self.pos[i] for i in range(2)])
+        self.xy = xy or [self.ent_size[i] * self.pos[i] for i in range(2)]
         self.init_image()
         return self
     
     @property
     def image(self):
+        image = self._image.copy()
         if self.added_color:
-            image = self._image.copy()
             image.fill(self.added_color, special_flags=pg.BLEND_ADD)
-            return image
-        return self._image
+        if self.flip:
+            image = pg.transform.flip(image, True, False)
+        return image
 
-    def update(self, dt):
+    def update(self, dt, move=False):
         pass
 
     def init_image(self):

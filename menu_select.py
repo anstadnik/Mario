@@ -2,6 +2,7 @@ import pygame as pg
 from pygame.freetype import SysFont
 from helpers import FinishGame
 from entity import ENTITY_T
+import time
 pg.init()
 
 
@@ -32,10 +33,10 @@ def menu_select(texts):
     background = background.get_at((0, 0))
 
     screen_width, screen_height = screen.get_size()
-    w, h = screen_width-50, (screen_height-50)//len(texts)
+    bl_w, bl_h = screen_width-50, (screen_height-50)//len(texts)
 
-    ys = range(25, 25+h*(len(texts)-1)+1, h)
-    buttons = [Button(h-20, w, 25, y, pg.Color('white'), text, font)
+    ys = range(25, 25+bl_h*(len(texts)-1)+1, bl_h)
+    buttons = [Button(bl_h-25, bl_w, 25, y, pg.Color('white'), text, font)
                for y, text in zip(ys, texts)]
     buttons = pg.sprite.Group(*buttons)
 

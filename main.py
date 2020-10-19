@@ -3,9 +3,7 @@ from ipdb import launch_ipdb_on_exception
 
 
 def main():
-    game = Menu(1260, 600)
-    # game = Menu(1000, 800)
-    # game = Menu()
+    game = Menu(1280, 720)
     with launch_ipdb_on_exception():
         game.run()
 

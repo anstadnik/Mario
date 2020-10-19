@@ -25,10 +25,9 @@ class Level():
         for x in range(self.w):
             entity, layer = entity_factory([x, self.h-1], ENTITY_T.GRASS, (self.bl_h, self.bl_w))
             self.sprites.add(entity, layer=layer)
-            print(entity.xy)
 
-    def update(self, dt):
-        self.sprites.update(dt)
+    def update(self, dt, move=False):
+        self.sprites.update(dt, move)
 
     def draw(self, screen):
         self.sprites.draw(screen)
@@ -36,14 +35,12 @@ class Level():
     def resize(self, screen_w: int = None, screen_h: int = None):
         w, h = pg.display.get_surface().get_size()
         screen_w, screen_h = screen_w or w, screen_h or h,
-        print(screen_w, screen_h)
         self.bl_w, self.bl_h = screen_w // self.w, screen_h // self.h
-        print(self.bl_w, self.bl_h, self.w, self.h)
         new_sprites = pg.sprite.LayeredUpdates()
         for b in self.sprites.sprites():
-            entity, layer = entity_factory(b.pos, b.entity, (self.bl_h, self.bl_w))
+            entity, layer = entity_factory(
+                b.pos, b.entity, (self.bl_w, self.bl_h))
             new_sprites.add(entity, layer=layer)
-            # __import__('ipdb').set_trace()
         self.sprites = new_sprites
         return self
 
@@ -51,6 +48,9 @@ class Level():
         pos = pos[0] // self.bl_w, pos[1] // self.bl_h
         entity, layer = entity_factory(pos, entity_type, (self.bl_h, self.bl_w))
         self.sprites.add(entity, layer=layer)
+
+    def get_sprites(self):
+        return [self.sprites.get_sprites_from_layer(l) for l in range(1, 6)]
 
     #############
     #  Dumping  #
@@ -64,9 +64,8 @@ class Level():
         level.bl_h, level.bl_w = screen_h // level.h, screen_w // level.w
         new_sprites = pg.sprite.LayeredUpdates()
         for pos, entity in level.sprites:
-            new_b = Block(pos, entity, bl_size=(level.bl_h, level.bl_w))
-            new_sprites.add(new_b.init_sprite((level.bl_h, level.bl_w)),
-                    layer=entity.layer)
+            entity, layer = entity_factory(pos, entity, (level.bl_h, level.bl_w))
+            new_sprites.add(entity, layer=layer)
         level.sprites = new_sprites
         return level
 
