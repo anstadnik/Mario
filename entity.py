@@ -84,8 +84,6 @@ class Entity(pg.sprite.Sprite):
         image = self._image.copy()
         if self.added_color:
             image.fill(self.added_color, special_flags=pg.BLEND_ADD)
-        if self.flip:
-            image = pg.transform.flip(image, True, False)
         return image
 
     def update(self, dt, move=False):

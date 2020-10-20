@@ -46,7 +46,7 @@ class Level():
 
     def add_sprite(self, pos: Tuple[int, int], entity_type: ENTITY_T):
         pos = pos[0] // self.bl_w, pos[1] // self.bl_h
-        entity, layer = entity_factory(pos, entity_type, (self.bl_h, self.bl_w))
+        entity, layer = entity_factory(pos, entity_type, ( self.bl_w,self.bl_h))
         self.sprites.add(entity, layer=layer)
 
     def get_sprites(self):
